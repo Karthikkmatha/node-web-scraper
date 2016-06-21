@@ -23,9 +23,9 @@ app.get('/scrape', function(req, res){
           var imageId;
           var json = { imageId : ""};
           //Using the Unique header for a starting point.
-          $('._8mlbc _vbtk2 _t5r8b').filter(function(){
+          $('._ktuwc').filter(function(){
             var data = $(this);
-            imageId = data.children().text();
+            imageId = data.children().first().text();
             json.imageId = imageId;
         })
 }
