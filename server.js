@@ -5,37 +5,35 @@ var cheerio = require('cheerio');
 var app     = express();
 
 app.get('/scrape', function(req, res){
+  //The url that we are trying to scrape the image from.
 
-url = 'http://www.imdb.com/title/tt1229340/';
+  url = 'https://www.instagram.com/explore/tags/berkeley/';
 
-request(url, function(error, response, html){
-    if(!error){
-        var $ = cheerio.load(html);
+  //The structure of our request call.
+  //The first parameter is our url.
+  //The callback function takes three parameters, an error, a response, an html.
 
-    var title, release, rating;
-    var json = { title : "", release : "", rating : ""};
+  request(url, function(error, response, html){
 
-    $('.header').filter(function(){
-        var data = $(this);
-        title = data.children().first().text();
-        release = data.children().last().children().text();
-
-        json.title = title;
-        json.release = release;
-    })
-
-    $('.star-box-giga-star').filter(function(){
-        var data = $(this);
-        rating = data.text();
-
-        json.rating = rating;
-    })
+    //First we'll check to make sure no errors occurred when making the request.
+      if(!error){
+        // Next we'll utilize the cheerio library on the returned html which will essentially give us jQuery functionality.
+          var $ = cheerio.load(html);
+          //Finally, we'll define the variables we're going to capture
+          var imageId;
+          var json = { imageId : ""};
+          //Using the Unique header for a starting point.
+          $('._8mlbc _vbtk2 _t5r8b').filter(function(){
+            var data = $(this);
+            imageId = data.children().text();
+            json.imageId = imageId;
+        })
 }
 
 // To write to the system we will use the built in 'fs' library.
 // In this example we will pass 3 parameters to the writeFile function
 // Parameter 1 :  output.json - this is what the created filename will be called
-// Parameter 2 :  JSON.stringify(json, null, 4) - the data to write, here we do an extra step by calling JSON.stringify to make our JSON easier to read
+// Parameter 2 :  JSON.stringify(json, null, 4) - t he data to write, here we do an extra step by calling JSON.stringify to make our JSON easier to read
 // Parameter 3 :  callback function - a callback function to let us know the status of our function
 
 fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
@@ -49,8 +47,7 @@ res.send('Check your console!')
 
     }) ;
 })
+
 app.listen('8081')
-
 console.log('Magic happens on port 8081');
-
 exports = module.exports = app;
