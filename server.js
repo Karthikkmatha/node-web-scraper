@@ -1,52 +1,54 @@
 var express = require('express');
 var fs = require('fs');
 var request = require('request');
-var cheerio = require('cheerio');
 var app     = express();
+var opener = require('opener');
 
-app.get('/scrape', function(req, res){
-  //The url that we are trying to scrape the image from.
 
-  url = 'https://www.instagram.com/explore/tags/berkeley/';
+ app.get('/scrape', function(req, res){
+//   //The url that we are trying to scrape the image from.
 
   //The structure of our request call.
   //The first parameter is our url.
   //The callback function takes three parameters, an error, a response, an html.
 
-  request(url, function(error, response, html){
+  request('https://www.instagram.com/edawgquaver/', function (error, response, body) {
 
-    //First we'll check to make sure no errors occurred when making the request.
-      if(!error){
-        // Next we'll utilize the cheerio library on the returned html which will essentially give us jQuery functionality.
-          var $ = cheerio.load(html);
-          //Finally, we'll define the variables we're going to capture
-          var imageId;
-          var json = { imageId : ""};
-          //Using the Unique header for a starting point.
-          $('._ktuwc').filter(function(){
-            var data = $(this);
-            imageId = data.children().first().text();
-            json.imageId = imageId;
-        })
-}
+      if (error) {
+          console.log("Error scraping website: " + error);
+      }
 
-// To write to the system we will use the built in 'fs' library.
-// In this example we will pass 3 parameters to the writeFile function
-// Parameter 1 :  output.json - this is what the created filename will be called
-// Parameter 2 :  JSON.stringify(json, null, 4) - t he data to write, here we do an extra step by calling JSON.stringify to make our JSON easier to read
-// Parameter 3 :  callback function - a callback function to let us know the status of our function
+      if (response.statusCode != 200) {
+          console.log("Invalid status code received: " + response.statusCode);
+      }
 
-fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
+      if (!error && response.statusCode == 200) {
 
-    console.log('File successfully written! - Check your project directory for the output.json file');
+          console.log("Successful Scraping");
+          console.log("-------------------");
 
-})
+          //Extract image urls using pattern found by observing HTML (console.log the body variable)
+          var imageUrls = body.match(/"thumbnail_src": "([\s\S]*?)"/gi);
 
-// Finally, we'll just send out a message to the browser reminding you that this app does not have a UI.
-res.send('Check your console!')
+          //Clean Image Urls
+          for (var i = 0; i < imageUrls.length; i++){
 
+              var cleanImageUrl = imageUrls[i];
+              cleanImageUrl = cleanImageUrl.substring(16);
+              cleanImageUrl = cleanImageUrl.substring(0,cleanImageUrl.length-1);
+              cleanImageUrl = cleanImageUrl.substring(2)
+              imageUrls[i] = cleanImageUrl
+          }
+      }
+      fs.writeFile('output.json', JSON.stringify(imageUrls, null, 4), function(err){
+
+          console.log('File successfully written! - Check your project directory for the output.json file');
+
+      })
+      opener([imageUrls[0], imageUrls[1], imageUrls[2]])
+      res.send('Check your console!')
     }) ;
-})
+  })
 
 app.listen('8081')
 console.log('Magic happens on port 8081');
